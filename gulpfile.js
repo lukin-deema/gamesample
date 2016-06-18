@@ -35,19 +35,19 @@ gulp.task('copyMyAngular', function(){
 		.pipe(gulp.dest('public/app'));
 })
 gulp.task("copyLibFonts",function(){
-	return gulp.src("bower_components/bootstrap/fonts/*.*")
+	return gulp.src("node_modules/bootstrap/fonts/*.*")
 		.pipe($.newer('public'))
 		.pipe(gulp.dest('public/assets/fonts'));	
 })
 gulp.task('copyLibJs', function(){
-	return gulp.src(["bower_components/bootstrap/dist/js/bootstrap.js",
-		"bower_components/angular-ui-router/release/angular-ui-router.js",
-		"bower_components/angular/angular.js"])
+	return gulp.src(["node_modules/bootstrap/dist/js/bootstrap.js",
+		"node_modules/angular-ui-router/release/angular-ui-router.js",
+		"node_modules/angular/angular.js"])
 		.pipe($.newer('public/assets/lib'))
 		.pipe(gulp.dest('public/assets/lib'))///
 })
 gulp.task('copyLibCss', function(){
-	return gulp.src(["bower_components/bootstrap/dist/css/bootstrap.css"])
+	return gulp.src(["node_modules/bootstrap/dist/css/bootstrap.css"])
 		.pipe($.newer('public/assets/css'))
 		.pipe(gulp.dest('public/assets/css'))///
 })
