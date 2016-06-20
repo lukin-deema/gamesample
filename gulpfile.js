@@ -5,6 +5,7 @@ var path = require("path");
 var multipipe = require("multipipe");
 var wiredep = require('wiredep').stream;
 var bowerFiles = require('bower-files')();
+var browserSync = require("browser-sync");
 
 var env = process.env.NODE_ENV || 'development';
 var isDev =  env == 'development';
@@ -12,22 +13,25 @@ var path = {
 	src: {
 		styles: "frontend/styles/*.sass",
 		assets: "frontend/assets/**",
+		favicon: "frontend/favicon.ico"
 	},
 	build:{
 		styles: 'public/assets/css',
 		assets: 'public/assets',
 		bowerFonts: 'public/assets/fonts',
 		bowerJs: 'public/assets/lib',
+		favicon: "public"
 	}, 
 	htmlReplace: {
-		styles: [ ],
-		js: [ 'app/angularApp.js', 'app/controllers/appCtrl.js' ]
+		styles: [ 'assets/css/all.css' ],
+		js: [ 'app/angularApp.js', 'app/controllers/startPageCtrl.js' ]
 	}
 }
 gulp.task("clean", function(){
 
 	return del('public');
 })
+
 gulp.task('sass', function() {
 	return multipipe(
 		gulp.src(path.src.styles),
@@ -37,62 +41,91 @@ gulp.task('sass', function() {
 		$.concat("all.css"),
 		$.sourcemaps.write(),
 		gulp.dest(path.build.styles)
-		).on("error", $.notify.onError());
+	).on("error", $.notify.onError());
 });
 gulp.task('assets', function(){
-	return gulp.src(path.src.assets)
-		.pipe($.newer(path.build.assets))
-		.pipe(gulp.dest(path.build.assets));
+	return multipipe(
+		gulp.src(path.src.assets),
+		$.newer(path.build.assets),
+		gulp.dest(path.build.assets)
+	).on("error", $.notify.onError());
 })
+gulp.task('favicon', function(){
+	return multipipe(
+		gulp.src(path.src.favicon),
+		$.newer(path.build.favicon),
+		gulp.dest(path.build.favicon)
+	).on("error", $.notify.onError());
+})
+
 gulp.task('copyMyAngular', function(){
-	return gulp.src("frontend/app/**")
-	.pipe($.newer('public/app'))
-	.pipe(gulp.dest('public/app'))
+	return multipipe(
+		gulp.src("frontend/app/**"),
+		$.newer('public/app'),
+		gulp.dest('public/app')
+	).on("error", $.notify.onError());
 })
 gulp.task("copyBowerFonts",function(){
-	return gulp.src(bowerFiles.ext(['eot', 'woff', 'woff2', 'ttf', 'svg']).files)
-    .pipe(gulp.dest(path.build.bowerFonts));
+	return multipipe(
+		gulp.src(bowerFiles.ext(['eot', 'woff', 'woff2', 'ttf', 'svg']).files),
+    gulp.dest(path.build.bowerFonts)
+	).on("error", $.notify.onError());
 })
 gulp.task('copyBowerJs', function(){
-	return gulp.src(bowerFiles.ext('js').files)
-    .pipe(gulp.dest(path.build.bowerJs));
+	return multipipe(
+		gulp.src(bowerFiles.ext('js').files),
+    gulp.dest(path.build.bowerJs)
+	).on("error", $.notify.onError());
 })
 gulp.task('copyBowerCss', function(){
-	return gulp.src(bowerFiles.ext('css').files)
-    .pipe(gulp.dest(path.build.styles));
+	return multipipe(
+		gulp.src(bowerFiles.ext('css').files),
+    gulp.dest(path.build.styles)
+	).on("error", $.notify.onError());
 })
 
 gulp.task('processHtml', function () {
-	return gulp.src('frontend/index.html')
-	.pipe(wiredep({src: "public/assets/",
-		ignorePath: /[a-zA-Z_\-\.]+\//g,
-		fileTypes: {
-			html: {
-				replace: {
-					js: '<script src="assets/lib/{{filePath}}"></script>',
-					css: '<link rel="stylesheet" href="assets/css/{{filePath}}" />',
+	return multipipe(
+		gulp.src('frontend/index.html'),
+		wiredep({src: "public/assets/",
+			ignorePath: /[a-zA-Z0-9_\-\.]+\//g, 
+			fileTypes: {
+				html: {
+					replace: {
+						js: '<script src="assets/lib/{{filePath}}"></script>',
+						css: '<link rel="stylesheet" href="assets/css/{{filePath}}" />',
+					}
 				}
 			}
-		}
-	}))
-	.pipe($.htmlReplace({
-		'css':{
-			src: path.htmlReplace.styles,
-			tpl:'<link rel="stylesheet" href="%s" />'
-		},
-		'js':{
-			src: path.htmlReplace.js,
-			tpl:'<script type="text/javascript" src="%s" charset="UTF-8"></script>'
-		}
-	}, { keepBlockTags: true }))
-	.pipe(gulp.dest('public'));
+		}),
+		$.htmlReplace({
+			'css':{
+				src: path.htmlReplace.styles,
+				tpl:'<link rel="stylesheet" href="%s" />'
+			},
+			'js':{
+				src: path.htmlReplace.js,
+				tpl:'<script type="text/javascript" src="%s" charset="UTF-8"></script>'
+			}
+		}, { keepBlockTags: true }),
+		gulp.dest('public')
+	).on("error", $.notify.onError());
 });
 
-gulp.task("watch",function(){
+gulp.task("startWatch",function(){
 	gulp.watch("frontend/styles/*.sass", gulp.series("sass"))
 	gulp.watch("frontend/assets/**", gulp.series("assets"))
+	gulp.watch("frontend/app/**", gulp.series("copyMyAngular"))
+	gulp.watch("frontend/index.html", gulp.series("processHtml"))
 });
-
+gulp.task("startBrowserSync",function(){
+	browserSync.init({
+		proxy:{
+			target:"localhost:2000"
+		}
+	})
+	browserSync.watch("public/**/*.*").on("change", browserSync.reload)
+})
 gulp.task('startServer', function() {
 	$.nodemon({
 		script: 'app.js',
@@ -128,6 +161,6 @@ gulp.task('startServer', function() {
 
 gulp.task('default', gulp.series(
 	"clean",
-	gulp.parallel("sass", "assets", "copyBowerJs", "copyBowerCss", "copyMyAngular", "copyBowerFonts","processHtml"),
-	gulp.parallel("startServer", "watch")
+	gulp.parallel("sass", "assets", "favicon", "copyBowerJs", "copyBowerCss", "copyMyAngular", "copyBowerFonts", "processHtml"),
+	gulp.parallel("startServer", "startBrowserSync", "startWatch")
 ));

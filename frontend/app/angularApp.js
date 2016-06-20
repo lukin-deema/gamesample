@@ -6,8 +6,8 @@ angular.module('myApp', [
 	$urlRouterProvider.otherwise('/');
 	$stateProvider.state('app', {
 		url: '/',
-		templateUrl: 'app/views/app.html',
-		controller: 'appCtrl'
+		templateUrl: 'app/views/startPage.html',
+		controller: 'startPageCtrl'
 	});
 }).run(function () {
 
