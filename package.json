@@ -32,6 +32,7 @@
     "gulp-remember": "~0.3.1",
     "gulp-sass": "~2.3.2",
     "gulp-sourcemaps": "~1.6.0",
+    "gulp-uglify": "^1.5.3",
     "morgan": "~1.7.0",
     "multipipe": "~0.3.1",
     "nconf": "~0.8.4",
