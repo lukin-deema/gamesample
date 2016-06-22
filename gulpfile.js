@@ -15,6 +15,7 @@ var path = {
 		styles: "frontend/styles/*.sass",
 		assets: "frontend/assets/**",
 		favicon: "frontend/favicon.ico",
+		socketIO: "bower_components/socket.io-client/**",
 	},
 	build:{
 		styles: 'public/assets/css',
@@ -26,15 +27,18 @@ var path = {
 	},
 	htmlReplace: {
 		styles: [ 'assets/css/all.css' ],
-		jsSeparate: [ 
-			'app/angularApp.js', 
-			'app/services/d3.js', 
-			'app/controllers/startPageCtrl.js', 
-			'app/controllers/fieldPageCtrl.js', 
-			'app/directives/keyPress.js', 
-			'app/directives/d3Basic.js', 
+		jsSeparate: [
+			'/socket.io/socket.io.js',
+			'app/angularApp.js',
+			'app/services/d3.js',
+			'app/services/socketio.js',
+			'app/controllers/startPageCtrl.js',
+			'app/controllers/fieldPageCtrl.js',
+			'app/directives/keyPress.js',
+			'app/directives/d3Basic.js',
 		],	
-		jsConcat: [ 
+		jsConcat: [
+			'public/assets/lib/socket.io.js',
 			'app/application.js'
 		]
 	}
@@ -160,6 +164,14 @@ gulp.task('processHtml', function () {
 		gulp.dest(path.build.public)
 	).on("error", $.notify.onError());
 });
+gulp.task('copySocketIO', function(){
+	return multipipe(
+		gulp.src(path.src.socketIO),
+		$.newer(path.build.bowerJs),
+		$.debug({title:"copySocketIO"}),
+    gulp.dest('public/socket.io')
+	).on("error", $.notify.onError());
+})
 
 gulp.task("startWatch",function(){
 	gulp.watch("frontend/styles/*.sass", gulp.series("sass"))
@@ -212,14 +224,14 @@ gulp.task('startServer', function() {
 gulp.task("preparePublic", 
 	gulp.parallel("sass", "assets", "favicon", "copyBowerJs", 
 		"copyBowerCss", "copyMyAngularJS", "copyMyAngularHTML", 
-		"copyBowerFonts", "processHtml")
+		"copyBowerFonts", "processHtml"/*, "copySocketIO"*/)
 )
 gulp.task("startPublic",
 	gulp.parallel("startServer", "startBrowserSync", "startWatch")
 )
 
 gulp.task('default', gulp.series(
-	//"clean",
+	"clean",
 	"preparePublic",
 	"startPublic"
 ));

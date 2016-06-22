@@ -60,5 +60,7 @@ app.set('port', port);
 var server = http.createServer(app);
 
 server.listen(port, function(){
-  log.info('Listening port ', 2000)
+  log.info('Listening port ', port)
 });
+
+require("./socket")(server);

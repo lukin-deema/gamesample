@@ -56,7 +56,7 @@
 						})
 						.attr("cy", function(d, i){ return d.y || d.r; })
 						.attr("stroke", "black")
-						.attr("stroke-width",function(d){ return scope.isName ? "2" : "0"; })
+						.attr("stroke-width",function(d){ return d.isMe ? "2" : "0"; })
 						.on("click", function(d, i){ return scope.onClick({item: d}); })
 					if (scope.isName) {
 						svg.selectAll("text")

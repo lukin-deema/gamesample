@@ -19,5 +19,6 @@ angular.module('myApp', [
 
 }); 
 angular.module('d3', []);
-angular.module('myApp.controllers', []);
+angular.module('socket', []);
+angular.module('myApp.controllers', ['socket']);
 angular.module('myApp.directives', ['d3']);
