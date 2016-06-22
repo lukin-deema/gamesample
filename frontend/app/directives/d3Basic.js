@@ -8,14 +8,20 @@
 			scope: {
 				data: "=",
 				label: "@",
-				onClick: "&"
+				onClick: "&",
+				width: "=",
+				height: "=",
+				isName: "="
 			},
 			link: function(scope, iElement, iAttrs) {
-				var width = scope.data.length;
+				if (!scope.data) { return }
+				var len = scope.data.length;
+				var rad = scope.data[0].r;
+				
 				var svg = d3.select(iElement[0])
 				.append("svg")
-				.attr("width", width * 60)
-				.attr("height", 60);
+				.attr("width", scope.width || len * (2 * rad + 5))
+				.attr("height", scope.height || rad * 2);
 
 				// on window resize, re-render d3 canvas
 				window.onresize = function() {
@@ -45,13 +51,27 @@
 						.on("click", function(d, i){return scope.onClick({item: d});})
 						.attr("fill", function(d, i){return d.fill;})
 						.attr("r", function(d, i){return d.r;})
-						.attr("cx", function(d, i){
-							return i * 2.5 * d.r + d.r ;
+						.attr("cx", function(d, i){ 
+							return d.x || d.r + ( 2 * d.r + 5) * i;
 						})
-						.attr("cy", 30)
-						.on("click", function(d, i){
-							return scope.onClick({item: d});
-						})
+						.attr("cy", function(d, i){ return d.y || d.r; })
+						.attr("stroke", "black")
+						.attr("stroke-width",function(d){ return scope.isName ? "2" : "0"; })
+						.on("click", function(d, i){ return scope.onClick({item: d}); })
+					if (scope.isName) {
+						svg.selectAll("text")
+							.data(data)
+							.enter()
+							.append("text")
+							.text(function(d){return d.name})
+							.attr('x', function(d){
+								return d.x + d.r; 
+							})
+							.attr('y', function(d){
+								return d.y - d.r; 
+							})
+							.attr("fill",function(d) {return d.fill})
+					}
 				};
 			}	
 		};

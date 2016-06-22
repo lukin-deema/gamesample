@@ -8,6 +8,12 @@ angular.module('myApp', [
 		url: '/',
 		templateUrl: 'app/views/startPage.html',
 		controller: 'startPageCtrl'
+	})
+	.state('field', {
+		url:'/field',
+		templateUrl: 'app/views/fieldPage.html',
+		controller: 'fieldPageCtrl',
+		params: { userCircle: null/*{fill:'red',name:"asada"}*/ }
 	});
 }]).run(function () {
 

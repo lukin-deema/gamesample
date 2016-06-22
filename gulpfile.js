@@ -9,6 +9,7 @@ var browserSync = require("browser-sync");
 
 var env = process.env.NODE_ENV || 'development';
 var isDev =  env == 'development';
+var concatApplicationJs = false;
 var path = {
 	src: {
 		styles: "frontend/styles/*.sass",
@@ -25,14 +26,20 @@ var path = {
 	},
 	htmlReplace: {
 		styles: [ 'assets/css/all.css' ],
-		js: [ 
+		jsSeparate: [ 
 			'app/angularApp.js', 
 			'app/services/d3.js', 
 			'app/controllers/startPageCtrl.js', 
+			'app/controllers/fieldPageCtrl.js', 
+			'app/directives/keyPress.js', 
 			'app/directives/d3Basic.js', 
+		],	
+		jsConcat: [ 
+			'app/application.js'
 		]
 	}
 }
+
 gulp.task("clean", function(){
 
 	return del('public');
@@ -42,7 +49,7 @@ gulp.task('sass', function() {
 	return multipipe(
 		gulp.src(path.src.styles),
 		$.newer(path.src.styles),
-		$.if(isDev,$.debug({title:'src'})),
+		$.debug({title:'src'}),
 		$.sourcemaps.init(),
 		$.sass(),
 		$.concat("all.css"),
@@ -66,23 +73,26 @@ gulp.task('favicon', function(){
 		gulp.dest(path.build.public)
 	).on("error", $.notify.onError());
 })
-gulp.task('copyMy2Angular', function(){
+gulp.task('copyMyAngularHTML', function(){
 	return multipipe(
 		gulp.src("frontend/app/**/*.html"),
 		$.newer(path.build.angularApp),
-		$.debug({title:"copyMy2Angular"}),
+		$.debug({title:"copyMyAngularHTML"}),
 		gulp.dest(path.build.angularApp)
 	).on("error", $.notify.onError());
 })
-gulp.task('copyMyAngular', function(){
+gulp.task('copyMyAngularJS', function(){
 	return multipipe(
 		gulp.src("frontend/app/**/*.js"),
+		$.if(concatApplicationJs, $.sourcemaps.init()),
 		$.newer(path.build.angularApp),
-		$.debug({title:"copyMyAngular"}),
-		$.uglify(),
+		$.debug({title:"copyMyAngularJS"}),
+		//$.uglify(),
+		$.if(concatApplicationJs, $.concat("application.js")),
+		$.if(concatApplicationJs, $.sourcemaps.write()),
 		gulp.dest(path.build.angularApp)
 	).on("error", $.notify.onError(function(err){
-			return {title: "uglify", message: err}
+		return {title: "uglify", message: err}
 	}));
 })
 gulp.task("copyBowerFonts",function(){
@@ -125,16 +135,28 @@ gulp.task('processHtml', function () {
 				}
 			}
 		}),
-		$.htmlReplace({
-			'css':{
-				src: path.htmlReplace.styles,
-				tpl:'<link rel="stylesheet" href="%s" />'
-			},
-			'js':{
-				src: path.htmlReplace.js,
-				tpl:'<script type="text/javascript" src="%s" charset="UTF-8"></script>'
-			}
-		}, { keepBlockTags: true }),
+		$.if(concatApplicationJs, 
+			$.htmlReplace({
+				'css':{
+					src: path.htmlReplace.styles,
+					tpl:'<link rel="stylesheet" href="%s" />'
+				},
+				'js':{
+					src: path.htmlReplace.jsConcat,
+					tpl:'<script type="text/javascript" src="%s" charset="UTF-8"></script>'
+				}
+			}, { keepBlockTags: true }),
+			$.htmlReplace({
+				'css':{
+					src: path.htmlReplace.styles,
+					tpl:'<link rel="stylesheet" href="%s" />'
+				},
+				'js':{
+					src: path.htmlReplace.jsSeparate,
+					tpl:'<script type="text/javascript" src="%s" charset="UTF-8"></script>'
+				}
+			}, { keepBlockTags: true })
+		),
 		gulp.dest(path.build.public)
 	).on("error", $.notify.onError());
 });
@@ -142,7 +164,8 @@ gulp.task('processHtml', function () {
 gulp.task("startWatch",function(){
 	gulp.watch("frontend/styles/*.sass", gulp.series("sass"))
 	gulp.watch("frontend/assets/**", gulp.series("assets"))
-	gulp.watch("frontend/app/**", gulp.series("copyMyAngular"))
+	gulp.watch("frontend/app/**/*.html", gulp.series("copyMyAngularHTML"))
+	gulp.watch("frontend/app/**/*.js", gulp.series("copyMyAngularJS"))
 	gulp.watch("frontend/index.html", gulp.series("processHtml"))
 });
 gulp.task("startBrowserSync",function(){
@@ -188,7 +211,7 @@ gulp.task('startServer', function() {
 
 gulp.task("preparePublic", 
 	gulp.parallel("sass", "assets", "favicon", "copyBowerJs", 
-		"copyBowerCss", "copyMyAngular", "copyMy2Angular", 
+		"copyBowerCss", "copyMyAngularJS", "copyMyAngularHTML", 
 		"copyBowerFonts", "processHtml")
 )
 gulp.task("startPublic",
