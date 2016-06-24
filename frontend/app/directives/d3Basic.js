@@ -16,7 +16,7 @@
 			link: function(scope, iElement, iAttrs) {
 				if (!scope.data) { return }
 				var len = scope.data.length;
-				var rad = scope.data[0].r;
+				var rad = scope.data[0].info.r;
 				
 				var svg = d3.select(iElement[0])
 				.append("svg")
@@ -49,28 +49,28 @@
 						.enter()
 						.append("circle")
 						.on("click", function(d, i){return scope.onClick({item: d});})
-						.attr("fill", function(d, i){return d.fill;})
-						.attr("r", function(d, i){return d.r;})
+						.attr("fill", function(d, i){return d.info.fill;})
+						.attr("r", function(d, i){return d.info.r;})
 						.attr("cx", function(d, i){ 
-							return d.x || d.r + ( 2 * d.r + 5) * i;
+							return d.info.x || d.info.r + ( 2 * d.info.r + 5) * i;
 						})
-						.attr("cy", function(d, i){ return d.y || d.r; })
+						.attr("cy", function(d, i){ return d.info.y || d.info.r; })
 						.attr("stroke", "black")
-						.attr("stroke-width",function(d){ return d.isMe ? "2" : "0"; })
+						.attr("stroke-width",function(d){ return d.info.isMe ? "2" : "0"; })
 						.on("click", function(d, i){ return scope.onClick({item: d}); })
 					if (scope.isName) {
 						svg.selectAll("text")
 							.data(data)
 							.enter()
 							.append("text")
-							.text(function(d){return d.name})
+							.text(function(d){return d.info.name})
 							.attr('x', function(d){
-								return d.x + d.r; 
+								return d.info.x + d.info.r; 
 							})
 							.attr('y', function(d){
-								return d.y - d.r; 
+								return d.info.y - d.info.r; 
 							})
-							.attr("fill",function(d) {return d.fill})
+							.attr("fill",function(d) {return d.info.fill})
 					}
 				};
 			}	

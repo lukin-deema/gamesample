@@ -1,36 +1,41 @@
 module.exports = function(server){
 	var io = require('socket.io').listen(server);
-	var users = []; //{id: socketId, user: user without isMe prop}
+	var users = []; //{id: socketId, info: user without isMe prop}
 	io.set("origins", "localhost:*");
 	io.sockets.on("connection",function(socket){
-		console.log('connection: ' + socket.id);
+		console.log('\tconnection: ' + socket.id);
 
-		io.sockets.sockets[socket.id].emit("me:connect", users);
+		// send current users & ask information about connected user 
+		io.sockets.sockets[socket.id].emit("me:connect", users); 
 
-		socket.on("me:rename", function(user){
-			user.isMe = undefined;
-			console.log("init " + JSON.stringify(user));
-			users.push({id: socket.id, user: user});
-			socket.broadcast.emit("user:connect", {id: socket.id, user: user});
+		// get information about connected user
+		socket.on("me:rename", function(_user, cb){
+			_user.info.isMe = undefined;
+			var newUser = {id: socket.id, info: _user.info}
+			console.log("\tME:RENAME -> " + JSON.stringify(newUser)+ ",\nALL USERS -> " + JSON.stringify(users));
+			users.push(newUser);
+			cb(newUser.id);
+			socket.broadcast.emit("user:connect", newUser);
 		})
-		socket.on("user:move",function(user,cb){
-			var findUser = users.find(function(el){ 
-				return el.user.name == user.name;
+		socket.on("user:move",function(_user,cb){
+			var user = users.find(function(el){ 
+				return el.id == _user.id;
 			});
-			findUser.user.x = user.x;
-			findUser.user.y = user.y;
-			console.log("income user" + JSON.stringify(user)+ ",\tall users" + JSON.stringify(users) + "\tfound user" + JSON.stringify(findUser));
-			socket.broadcast.emit("user:move", findUser);
+			user.info.x = _user.info.x;
+			user.info.y = _user.info.y;
+			console.log("\tUSER:MOVE -> " + JSON.stringify(user)+ ",\nALL USERS -> " + JSON.stringify(users));
+			socket.broadcast.emit("user:move", user);
 		})
 		socket.on("disconnect", function(){
 			var u = users.filter(function(el){
 				return el.id == socket.id;
 			})[0];
 			users.splice(users.indexOf(u), 1);
-			console.log('disconnected: '+ JSON.stringify(u) + ",\tall users" + JSON.stringify(users));
+			console.log('\tDISCONNECT -> '+ JSON.stringify(u) + ",\nALL USERS -> " + JSON.stringify(users));
 			socket.broadcast.emit('user:left', u);
 		});
 		socket.on("error",function(){
+			console.error("\tERROR -> ",JSON.stringify(arguments));
 			debugger;
 		})
 	})
