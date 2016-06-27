@@ -6,6 +6,7 @@ angular.module('myApp.controllers').controller('fieldPageCtrl',
 			return 
 		}
 		$scope.userCircle = [{info:{ fill: "", name:"", isMe: true, r:10, x:30, y:30 }}];
+		if (!$scope.userCircle[0]) { debugger; }
 		$scope.userCircle[0].info.fill = $stateParams.userCircle.fill;
 		$scope.userCircle[0].info.name = $stateParams.userCircle.name;
 		$scope.hint = "move buttons ASWD"
@@ -15,7 +16,16 @@ angular.module('myApp.controllers').controller('fieldPageCtrl',
 			W : function(name, code) { $scope.move(0, -10); },
 			D : function(name, code) { $scope.move(+10, 0); }
 		};
+		// $scope.back = function(){
+		// 	socket.emit("user:leave", $scope.userCircle[0])
+		// 	$state.go("app");
+		// }
 		$scope.move = function(dx, dy){
+			if (!$scope.userCircle[0]) { debugger; }
+			if (!$scope.userCircle[0].id){
+				debugger;
+				return;
+			}
 			$scope.userCircle[0].info.x = $scope.userCircle[0].info.x + dx;
 			$scope.userCircle[0].info.y = $scope.userCircle[0].info.y + dy;
 			socket.emit('user:move', $scope.userCircle[0]);
@@ -27,16 +37,16 @@ angular.module('myApp.controllers').controller('fieldPageCtrl',
 					break;
 				}
 			}
+			if (!$scope.userCircle[i]) { debugger; }
 			$scope.userCircle[i].info.x = _user.info.x;
 			$scope.userCircle[i].info.y = _user.info.y;
 		})
-		socket.on("me:connect", function(_users){
+		socket.on("me:connect", function(_socketId, _users){
+			$scope.userCircle[0].id = _socketId;
 			_users.forEach(function(_user){
 				$scope.renderUser(_user);
 			})
-			socket.emit("me:rename", $scope.userCircle[0],function(id){
-				$scope.userCircle[0].id = id;
-			})
+			socket.emit("me:rename", $scope.userCircle[0])
 		})
 		socket.on("user:connect", function(_user){
 
@@ -64,6 +74,7 @@ angular.module('myApp.controllers').controller('fieldPageCtrl',
 			})
 			if (usr.length == 1) {
 				var i = $scope.indexOf(usr[0].id);
+				if (!$scope.userCircle[i]) { debugger; }
 				$scope.userCircle[i].info.x = _user.info.x;
 				$scope.userCircle[i].info.y = _user.info.y;
 			}

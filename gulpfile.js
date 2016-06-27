@@ -224,7 +224,7 @@ gulp.task('startServer', function() {
 gulp.task("preparePublic", 
 	gulp.parallel("sass", "assets", "favicon", "copyBowerJs", 
 		"copyBowerCss", "copyMyAngularJS", "copyMyAngularHTML", 
-		"copyBowerFonts", "processHtml"/*, "copySocketIO"*/)
+		"copyBowerFonts", "processHtml", "copySocketIO")
 )
 gulp.task("startPublic",
 	gulp.parallel("startServer", "startBrowserSync", "startWatch")
@@ -232,6 +232,6 @@ gulp.task("startPublic",
 
 gulp.task('default', gulp.series(
 	"clean",
-	"preparePublic",
-	"startPublic"
+	"preparePublic"
+	//, "startPublic"
 ));
