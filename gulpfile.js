@@ -231,7 +231,7 @@ gulp.task("startPublic",
 )
 
 gulp.task('default', gulp.series(
-	"clean",
+	//"clean",
 	"preparePublic"
 	//, "startPublic"
 ));
