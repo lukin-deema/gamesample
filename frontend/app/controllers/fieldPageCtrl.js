@@ -3,8 +3,10 @@ angular.module('myApp.controllers').controller('fieldPageCtrl',
 	function($scope, $state, $stateParams, socket) {
 		if (!$stateParams.userCircle) {
 			$state.go('app');
-			return 
+			return; 
 		}
+		$scope.width = 300;
+		$scope.height = 400;
 		$scope.userCircle = [{info:{ fill: "", name:"", isMe: true, r:10, x:30, y:30 }}];
 		if (!$scope.userCircle[0]) { debugger; }
 		$scope.userCircle[0].info.fill = $stateParams.userCircle.fill;
@@ -26,12 +28,17 @@ angular.module('myApp.controllers').controller('fieldPageCtrl',
 				debugger;
 				return;
 			}
+			if ($scope.userCircle[0].info.x + dx < $scope.userCircle[0].info.r ||
+					$scope.userCircle[0].info.x + dx > $scope.width - $scope.userCircle[0].info.r ||
+					$scope.userCircle[0].info.y + dy < $scope.userCircle[0].info.r ||
+					$scope.userCircle[0].info.y + dy > $scope.height - $scope.userCircle[0].info.r) {
+				return;
+			}
 			$scope.userCircle[0].info.x = $scope.userCircle[0].info.x + dx;
 			$scope.userCircle[0].info.y = $scope.userCircle[0].info.y + dy;
 			socket.emit('user:move', $scope.userCircle[0]);
 		}
 		socket.on("user:move", function (_user) {
-			console.log("on move: "+ JSON.stringify(_user));
 			for (var i = 0; i < $scope.userCircle.length; i++) {
 				if ($scope.userCircle[i].id == _user.id){
 					break;
@@ -53,7 +60,6 @@ angular.module('myApp.controllers').controller('fieldPageCtrl',
 			$scope.renderUser(_user);
 		})
 		socket.on("user:left",function(_user){
-			console.log("user:left " + JSON.stringify(_user));
 			var i = $scope.indexOf(_user.id);
 			$scope.userCircle.splice(i, 1);
 		})
@@ -78,6 +84,9 @@ angular.module('myApp.controllers').controller('fieldPageCtrl',
 				$scope.userCircle[i].info.x = _user.info.x;
 				$scope.userCircle[i].info.y = _user.info.y;
 			}
+		}
+		$scope.back = function(){
+			window.location = "/";
 		}
 	}
 ]);
